@@ -376,47 +376,71 @@
         
         // Reemplazar la función existente
         function loadProblemsFromMarkdown() {
-            // Crear elementos para cargar el archivo
-            const fileInputContainer = document.createElement('div');
-            fileInputContainer.className = 'file-input-container';
-            fileInputContainer.style.cssText = 'text-align: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;';
-            fileInputContainer.innerHTML = `
-                <p>Para visualizar los problemas, selecciona el archivo ProblemasDeDisenio.md</p>
-                <input type="file" id="mdFileInput" accept=".md" style="display:none;" />
-                <button id="selectFileButton" style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Seleccionar archivo Markdown
-                </button>
-            `;
+            // Intenta cargar el archivo automáticamente
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'ProblemasDeDisenio.md', true);
             
-            // Insertar antes de las pestañas
-            document.querySelector('.tabs').before(fileInputContainer);
-            
-            // Configurar eventos
-            document.getElementById('selectFileButton').addEventListener('click', function() {
-                document.getElementById('mdFileInput').click();
-            });
-            
-            document.getElementById('mdFileInput').addEventListener('change', function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        processMarkdownContent(e.target.result);
-                        // Ocultar el selector de archivos después de cargar
-                        fileInputContainer.style.display = 'none';
-                    };
-                    reader.readAsText(file);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    // Éxito: procesar el contenido
+                    processMarkdownContent(xhr.responseText);
+                    console.log("Archivo cargado automáticamente");
+                } else {
+                    // Falló: mostrar el selector de archivos
+                    showFileSelector();
                 }
-            });
+            };
             
-            // Mostrar mensaje en las pestañas
-            for (let i = 1; i <= 21; i++) {
-                const tabContent = document.getElementById(`problem${i}`);
-                tabContent.innerHTML = `
-                    <div style="text-align: center; padding: 20px;">
-                        <p>Selecciona el archivo ProblemasDeDisenio.md para ver el contenido.</p>
-                    </div>
+            xhr.onerror = function() {
+                // Error: mostrar el selector de archivos
+                showFileSelector();
+            };
+            
+            // Establecer timeout por si se bloquea
+            setTimeout(function() {
+                if (xhr.readyState < 4) {
+                    xhr.abort();
+                    showFileSelector();
+                }
+            }, 1000);
+            
+            xhr.send();
+            
+            // Función para mostrar el selector de archivos manual (como respaldo)
+            function showFileSelector() {
+                console.log("No se pudo cargar automáticamente, mostrando selector manual");
+                
+                const fileInputContainer = document.createElement('div');
+                fileInputContainer.className = 'file-input-container';
+                fileInputContainer.style.cssText = 'text-align: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;';
+                fileInputContainer.innerHTML = `
+                    <p>No se pudo cargar automáticamente. Por favor, selecciona el archivo ProblemasDeDisenio.md</p>
+                    <input type="file" id="mdFileInput" accept=".md" style="display:none;" />
+                    <button id="selectFileButton" style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Seleccionar archivo Markdown
+                    </button>
                 `;
+                
+                // Insertar antes de las pestañas
+                document.querySelector('.tabs').before(fileInputContainer);
+                
+                // Configurar eventos
+                document.getElementById('selectFileButton').addEventListener('click', function() {
+                    document.getElementById('mdFileInput').click();
+                });
+                
+                document.getElementById('mdFileInput').addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            processMarkdownContent(e.target.result);
+                            // Ocultar el selector de archivos después de cargar
+                            fileInputContainer.style.display = 'none';
+                        };
+                        reader.readAsText(file);
+                    }
+                });
             }
         }
         
