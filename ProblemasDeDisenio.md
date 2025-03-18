@@ -3386,7 +3386,7 @@ Esta implementación resuelve el problema al:
 
 Una arquitectura de API bien diseñada debe proporcionar respuestas coherentes y predecibles para facilitar su integración y uso. Estandarizar el formato de respuestas, utilizar correctamente los códigos de estado HTTP y proporcionar mensajes de error significativos mejoran significativamente la calidad de la API. Este enfoque no solo beneficia a los consumidores externos, sino que también facilita la implementación de interceptores genéricos y middleware para manejar aspectos transversales como autenticación, registro y tratamiento de errores.
 
-# Problema #18: Improper Logging Practices
+# Problema #18: Prácticas de Logging Impropias
 
 ## Descripción del Problema
 
@@ -3827,7 +3827,7 @@ Esta implementación resuelve el problema al:
 
 Una estrategia de logging bien implementada es crucial para la operación, mantenimiento y diagnóstico de aplicaciones empresariales. El logging estructurado, con niveles adecuados, datos de contexto enriquecidos y mecanismos de correlación, permite identificar y resolver problemas rápidamente en entornos de producción. Además, una práctica adecuada de logging debe balancear la necesidad de información diagnóstica con la protección de datos sensibles y el rendimiento del sistema. La inversión en una buena arquitectura de logging desde el inicio del proyecto paga dividendos significativos cuando se necesita investigar comportamientos anómalos en producción.
 
-# Problema #19: Insufficient Automated Testing and Test-Driven Development Practices
+# Problema #19: Testings Automáticos y TDD Insuficientes
 
 ## Descripción del Problema
 
