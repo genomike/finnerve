@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAT Issues</title>
+    <style>
+        /* General Styles */
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            background-color: #fff;
+            z-index: 100;
+            padding: 10px 0 0 0;
+        }
+        
+        .tab-button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+            background-color: #f8f8f8;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .tab-button:hover {
+            background-color: #e9e9e9;
+        }
+        
+        .tab-button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Problem Content Styling */
+        .problem-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        
+        .description {
+            margin-bottom: 20px;
+        }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #333;
+            margin: 20px 0;
+        }
+        
+        .file-path {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .consequences {
+            background-color: #fff8f8;
+            border-left: 4px solid #e74c3c;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        
+        .consequences h2 {
+            color: #c0392b;
+            margin-top: 0;
+            font-size: 1.4em;
+        }
+        
+        .consequences ol {
+            margin-bottom: 0;
+        }
+        
+        .solution {
+            background-color: #f0fff0;
+            border-left: 4px solid #27ae60;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        
+        .solution h2 {
+            color: #27ae60;
+            margin-top: 0;
+            font-size: 1.4em;
+        }
+        
+        .benefits {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        
+        .benefits h2 {
+            color: #3498db;
+            margin-top: 0;
+            font-size: 1.4em;
+        }
+        
+        .benefits ul {
+            margin-bottom: 0;
+        }
+        
+        .conclusion {
+            background-color: #fafafa;
+            border-top: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 30px;
+        }
+        
+        .conclusion h2 {
+            font-size: 1.4em;
+            margin-top: 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+                border-bottom: none;
+            }
+            
+            .tab-button {
+                margin-bottom: 5px;
+                border-radius: 4px;
+                border: 1px solid #ddd;
+            }
+        }
+
+        /* Code highlighting */
+        .keyword { color: #0000ff; }
+        .string { color: #a31515; }
+        .comment { color: #008000; font-style: italic; }
+        .type { color: #2b91af; }
+        
+        /* Loading indicator */
+        .loading {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+            color: #666;
+        }
+        
+        .loading::after {
+            content: "...";
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60% { content: "..."; }
+            80%, 100% { content: ""; }
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            border-left: 4px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>20 Problemas en PAT (diseño, smell code y technical deb)</h1>
+        
+        <!-- Tab Navigation -->
+        <div class="tabs" id="tab-navigation">
+            <button class="tab-button active" onclick="openTab(event, 'problem1')">1</button>
+            <button class="tab-button" onclick="openTab(event, 'problem2')">2</button>
+            <button class="tab-button" onclick="openTab(event, 'problem3')">3</button>
+            <button class="tab-button" onclick="openTab(event, 'problem4')">4</button>
+            <button class="tab-button" onclick="openTab(event, 'problem5')">5</button>
+            <button class="tab-button" onclick="openTab(event, 'problem6')">6</button>
+            <button class="tab-button" onclick="openTab(event, 'problem7')">7</button>
+            <button class="tab-button" onclick="openTab(event, 'problem8')">8</button>
+            <button class="tab-button" onclick="openTab(event, 'problem9')">9</button>
+            <button class="tab-button" onclick="openTab(event, 'problem10')">10</button>
+            <button class="tab-button" onclick="openTab(event, 'problem11')">11</button>
+            <button class="tab-button" onclick="openTab(event, 'problem12')">12</button>
+            <button class="tab-button" onclick="openTab(event, 'problem13')">13</button>
+            <button class="tab-button" onclick="openTab(event, 'problem14')">14</button>
+            <button class="tab-button" onclick="openTab(event, 'problem15')">15</button>
+            <button class="tab-button" onclick="openTab(event, 'problem16')">16</button>
+            <button class="tab-button" onclick="openTab(event, 'problem17')">17</button>
+            <button class="tab-button" onclick="openTab(event, 'problem18')">18</button>
+            <button class="tab-button" onclick="openTab(event, 'problem19')">19</button>
+            <button class="tab-button" onclick="openTab(event, 'problem20')">20</button>
+        </div>
+        
+        <!-- Tab Contents -->
+        <!-- Problem 1 -->
+        <div id="problem1" class="tab-content active">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 2 -->
+        <div id="problem2" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 3 -->
+        <div id="problem3" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 4 -->
+        <div id="problem4" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 5 -->
+        <div id="problem5" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 6 -->
+        <div id="problem6" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 7 -->
+        <div id="problem7" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 8 -->
+        <div id="problem8" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 9 -->
+        <div id="problem9" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 10 -->
+        <div id="problem10" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 11 -->
+        <div id="problem11" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 12 -->
+        <div id="problem12" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 13 -->
+        <div id="problem13" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 14 -->
+        <div id="problem14" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 15 -->
+        <div id="problem15" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 16 -->
+        <div id="problem16" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 17 -->
+        <div id="problem17" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 18 -->
+        <div id="problem18" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 19 -->
+        <div id="problem19" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 20 -->
+        <div id="problem20" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+        
+        <!-- Problem 21 -->
+        <div id="problem21" class="tab-content">
+            <div class="loading">Cargando contenido</div>
+        </div>
+    </div>
+
+    <script>
+        // Función para activar pestaña
+        function openTab(evt, tabId) {
+            // Ocultar todos los contenidos de pestaña
+            const tabcontents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontents.length; i++) {
+                tabcontents[i].style.display = "none";
+            }
+            
+            // Desactivar todas las pestañas
+            const tablinks = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            // Mostrar el contenido de la pestaña seleccionada y activarla
+            document.getElementById(tabId).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        // Reemplazar la función existente
+        function loadProblemsFromMarkdown() {
+            // Crear elementos para cargar el archivo
+            const fileInputContainer = document.createElement('div');
+            fileInputContainer.className = 'file-input-container';
+            fileInputContainer.style.cssText = 'text-align: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;';
+            fileInputContainer.innerHTML = `
+                <p>Para visualizar los problemas, selecciona el archivo ProblemasDeDisenio.md</p>
+                <input type="file" id="mdFileInput" accept=".md" style="display:none;" />
+                <button id="selectFileButton" style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    Seleccionar archivo Markdown
+                </button>
+            `;
+            
+            // Insertar antes de las pestañas
+            document.querySelector('.tabs').before(fileInputContainer);
+            
+            // Configurar eventos
+            document.getElementById('selectFileButton').addEventListener('click', function() {
+                document.getElementById('mdFileInput').click();
+            });
+            
+            document.getElementById('mdFileInput').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        processMarkdownContent(e.target.result);
+                        // Ocultar el selector de archivos después de cargar
+                        fileInputContainer.style.display = 'none';
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            
+            // Mostrar mensaje en las pestañas
+            for (let i = 1; i <= 21; i++) {
+                const tabContent = document.getElementById(`problem${i}`);
+                tabContent.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <p>Selecciona el archivo ProblemasDeDisenio.md para ver el contenido.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Función para procesar el contenido del Markdown
+        function processMarkdownContent(content) {
+            // Dividir el contenido por los encabezados de problemas
+            const problemPattern = /# Problema #(\d+):(.*?)(?=# Problema #\d+:|$)/gs;
+            let match;
+            let count = 0;
+            
+            while ((match = problemPattern.exec(content)) !== null) {
+                const problemNumber = match[1];
+                const problemContent = match[0];
+                
+                // Obtener el contenedor de la pestaña correspondiente
+                const tabId = `problem${problemNumber}`;
+                const tabContent = document.getElementById(tabId);
+                
+                if (tabContent) {
+                    // Procesar el contenido del problema
+                    populateTabWithProblem(tabContent, problemContent, problemNumber);
+                    count++;
+                }
+            }
+            
+            // Si no se encontraron problemas, mostrar mensaje
+            if (count === 0) {
+                const errorMsg = "No se encontraron problemas en el formato esperado en el archivo Markdown.";
+                console.error(errorMsg);
+                
+                for (let i = 1; i <= 21; i++) {
+                    const tabContent = document.getElementById(`problem${i}`);
+                    tabContent.innerHTML = `<div class="error-message">${errorMsg}</div>`;
+                }
+            } else {
+                console.log(`Se procesaron ${count} problemas de diseño`);
+            }
+        }
+        
+        // Función para extraer una sección específica del markdown
+        function extractSection(content, sectionName, nextSectionMarker = '##') {
+            const regex = new RegExp(`## ${sectionName}\\s+([\\s\\S]*?)(?=${nextSectionMarker}|$)`);
+            const match = content.match(regex);
+            return match ? match[1].trim() : '';
+        }
+        
+        // Función para extraer código de una sección
+        function extractCode(section) {
+            const codeMatch = section.match(/```csharp\s+([\s\S]*?)```/);
+            if (codeMatch) {
+                // Aplicar resaltado de sintaxis al código extraído
+                return highlightCSharpCode(codeMatch[1].trim());
+            }
+            return '';
+        }
+        
+        // Función para extraer la ruta del archivo
+        function extractFilePath(codeSection) {
+            const pathMatch = codeSection.match(/\*\*Archivo:\*\* `([^`]+)`/);
+            return pathMatch ? pathMatch[1] : '';
+        }
+        
+        // Función para formatear listas en el markdown
+        function formatList(content) {
+            // Para lista numerada
+            if (content.match(/\d+\. /)) {
+                const items = content
+                    .split('\n')
+                    .filter(line => line.trim().match(/^\d+\. /))
+                    .map(line => {
+                        // Extraer contenido con formato bold
+                        const boldReplaced = line.replace(/\*\*([^*]+)\*\*/, '<strong>$1</strong>');
+                        return `<li>${boldReplaced.replace(/^\d+\. /, '')}</li>`;
+                    })
+                    .join('');
+                return `<ol>${items}</ol>`;
+            }
+            // Para lista con viñetas
+            else if (content.match(/- /)) {
+                const items = content
+                    .split('\n')
+                    .filter(line => line.trim().match(/^- /))
+                    .map(line => `<li>${line.replace(/^- /, '')}</li>`)
+                    .join('');
+                return `<ul>${items}</ul>`;
+            }
+            
+            // Si no es una lista, simplemente devolvemos párrafos
+            return `<p>${content}</p>`;
+        }
+        
+        // Función para poblar una pestaña con el contenido de un problema
+        function populateTabWithProblem(tabElement, problemContent, problemNumber) {
+            // Extraer título del problema
+            const titleMatch = problemContent.match(/# Problema #\d+:(.*)/);
+            const title = titleMatch ? titleMatch[1].trim() : `Problema #${problemNumber}`;
+            
+            // Extraer descripción
+            const description = extractSection(problemContent, "Descripción del Problema");
+            
+            // Extraer secciones relevantes
+            const codeProblematicoSection = extractSection(problemContent, "Código Problemático");
+            const consecuenciasSection = extractSection(problemContent, "Consecuencias");
+            const solucionSection = extractSection(problemContent, "Solución Recomendada");
+            const beneficiosSection = extractSection(problemContent, "Beneficios de la Solución");
+            const conclusionSection = extractSection(problemContent, "Conclusión");
+            
+            // Construir el HTML para la pestaña
+            let html = `
+                <h2 class="problem-title">Problema #${problemNumber}:${title}</h2>
+                
+                <div class="description">
+                    <p>${description || 'No se proporcionó descripción para este problema.'}</p>
+                </div>
+            `;
+            
+            // Para el código problemático
+            if (codeProblematicoSection) {
+                const filePath = extractFilePath(codeProblematicoSection);
+                html += `
+                    <h3>Código Problemático</h3>
+                    <div class="code-block">
+                        ${filePath ? `<div class="file-path">Archivo: ${filePath}</div>` : ''}
+                        <pre>${extractCode(codeProblematicoSection)}</pre>
+                    </div>
+                `;
+            }
+            
+            // Agregar consecuencias si existen
+            if (consecuenciasSection) {
+                html += `
+                    <div class="consequences">
+                        <h2>Consecuencias</h2>
+                        ${formatList(consecuenciasSection)}
+                    </div>
+                `;
+            }
+            
+            // Para la solución recomendada
+            if (solucionSection) {
+                const solCode = extractCode(solucionSection);
+                html += `
+                    <div class="solution">
+                        <h2>Solución Recomendada</h2>
+                        <div class="code-block">
+                            <pre>${solCode}</pre>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Agregar beneficios si existen
+            if (beneficiosSection) {
+                html += `
+                    <div class="benefits">
+                        <h2>Beneficios de la Solución</h2>
+                        ${formatList(beneficiosSection)}
+                    </div>
+                `;
+            }
+            
+            // Agregar conclusión si existe
+            if (conclusionSection) {
+                html += `
+                    <div class="conclusion">
+                        <h2>Conclusión</h2>
+                        <p>${conclusionSection}</p>
+                    </div>
+                `;
+            }
+            
+            // Insertar el contenido en la pestaña
+            tabElement.innerHTML = html;
+        }
+        
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Asignar el manejador de eventos a todos los botones de pestaña
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const tabId = this.getAttribute('onclick').match(/openTab\(event,\s*'([^']+)'\)/)[1];
+                    openTab(event, tabId);
+                });
+            });
+            
+            // Cargar el contenido del archivo Markdown
+            loadProblemsFromMarkdown();
+        });
+    
+                // Función para aplicar resaltado de sintaxis a código C#
+        function highlightCSharpCode(code) {
+            if (!code) return '';
+            
+            // Lista de palabras clave de C#
+            const keywords = [
+                'abstract', 'as', 'base', 'bool', 'break', 'byte', 'case', 'catch', 'char', 'checked', 
+                'class', 'const', 'continue', 'decimal', 'default', 'delegate', 'do', 'double', 'else', 
+                'enum', 'event', 'explicit', 'extern', 'false', 'finally', 'fixed', 'float', 'for', 
+                'foreach', 'goto', 'if', 'implicit', 'in', 'int', 'interface', 'internal', 'is', 'lock', 
+                'long', 'namespace', 'new', 'null', 'object', 'operator', 'out', 'override', 'params', 
+                'private', 'protected', 'public', 'readonly', 'ref', 'return', 'sbyte', 'sealed', 
+                'short', 'sizeof', 'stackalloc', 'static', 'string', 'struct', 'switch', 'this', 'throw', 
+                'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe', 'ushort', 'using', 
+                'virtual', 'void', 'volatile', 'while', 'add', 'and', 'alias', 'ascending', 'async', 
+                'await', 'by', 'descending', 'dynamic', 'equals', 'from', 'get', 'global', 'group', 'into', 
+                'join', 'let', 'nameof', 'on', 'orderby', 'partial', 'remove', 'select', 'set', 'value', 
+                'var', 'when', 'where', 'yield'
+            ];
+            
+            // Lista de tipos comunes de C#
+            const types = [
+                'bool', 'byte', 'char', 'decimal', 'double', 'float', 'int', 'long', 
+                'object', 'sbyte', 'short', 'string', 'uint', 'ulong', 'ushort', 
+                'Task', 'List', 'Dictionary', 'IEnumerable', 'DateTime', 'Guid', 'Exception',
+                'TimeSpan', 'Action', 'Func', 'Type'
+            ];
+            
+            // Función para escapar caracteres especiales en HTML
+            function escapeHtml(text) {
+                return text
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+            
+            // Escapar el código para prevenir inyección HTML
+            let highlightedCode = escapeHtml(code);
+            
+            // Aplicar resaltado a cadenas
+            highlightedCode = highlightedCode.replace(/"([^"\\]*(\\.[^"\\]*)*)"/, '<span class="string">"$1"</span>');
+            
+            // Aplicar resaltado a comentarios de línea
+            highlightedCode = highlightedCode.replace(/(\/\/[^\n]*)/g, '<span class="comment">$1</span>');
+            
+            // Aplicar resaltado a palabras clave
+            for (const keyword of keywords) {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'g');
+                highlightedCode = highlightedCode.replace(regex, '<span class="keyword">$&</span>');
+            }
+            
+            // Aplicar resaltado a tipos
+            for (const type of types) {
+                const regex = new RegExp(`\\b${type}\\b`, 'g');
+                highlightedCode = highlightedCode.replace(regex, '<span class="type">$&</span>');
+            }
+            
+            return highlightedCode;
+        }
+    </script>
+</body>
+</html>
