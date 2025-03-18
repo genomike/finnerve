@@ -676,7 +676,7 @@
             highlightedCode = highlightedCode.replace(/"([^"\\]*(\\.[^"\\]*)*)"/, '<span class="string">"$1"</span>');
             
             // Aplicar resaltado a comentarios de línea
-            highlightedCode = highlightedCode.replace(/(\/\/[^\n]*)/g, '<span class="comment">$1</span>');
+            //highlightedCode = highlightedCode.replace(/(\/\/[^\n]*)/g, '<span class="comment">$1</span>');
             
             // Aplicar resaltado a palabras clave
             for (const keyword of keywords) {
