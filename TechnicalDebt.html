@@ -118,13 +118,13 @@
         }
         
         .consequences h2 {
-            color: #c0392b;
+            color: #ff8c00; /* Color naranja para Consecuencias */
             margin-top: 0;
             font-size: 1.4em;
         }
         
-        .consequences ol {
-            margin-bottom: 0;
+        .consequences ol, .consequences p {
+            color: #ff8c00; /* Color naranja para el contenido */
         }
         
         .solution {
@@ -216,6 +216,87 @@
             margin: 20px 0;
             border-radius: 4px;
             border-left: 4px solid #f5c6cb;
+        }
+
+        .maintenance-impact {
+            background-color: #fff0f0;
+            border-left: 4px solid #c0392b;
+            padding: 15px;
+            margin: 20px 0;
+            color: #c0392b; /* Color base para todo el contenido */
+        }
+        
+        .maintenance-impact h2, .maintenance-impact h3, .maintenance-impact p, .maintenance-impact strong {
+            color: #e74c3c; /* Color rojo para Impacto en Mantenimiento */
+            margin-top: 0;
+        }
+        
+        .maintenance-impact h2 {
+            font-size: 1.4em;
+        }
+
+        /* Estilos mejorados para el impacto en mantenimiento */
+        .maintenance-impact {
+            background-color: #fff0f0;
+            border-left: 4px solid #c0392b;
+            padding: 15px;
+            margin: 20px 0;
+            color: #c0392b; /* Color base para todo el contenido */
+        }
+        
+        .maintenance-impact h2 {
+            color: #e74c3c;
+            margin-top: 0;
+            font-size: 1.4em;
+            border-bottom: 1px solid rgba(231, 76, 60, 0.3);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .maintenance-impact h3 {
+            color: #e74c3c;
+            font-size: 1.2em;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        .maintenance-impact p {
+            color: #c0392b; /* Un rojo más oscuro para el texto del párrafo */
+            margin-bottom: 12px;
+        }
+        
+        .impact-level {
+            display: inline-block;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+            color: white;
+        }
+        
+        .impact-high {
+            background-color: #e74c3c;
+        }
+        
+        .impact-medium {
+            background-color: #f39c12;
+        }
+        
+        .impact-low {
+            background-color: #3498db;
+        }
+
+        /* Si hay listas dentro del impacto en mantenimiento */
+        .maintenance-impact ol, 
+        .maintenance-impact ul, 
+        .maintenance-impact li {
+            color: #c0392b;
+        }
+
+        /* Para asegurar que el texto dentro de strong también sea rojo oscuro */
+        .maintenance-impact strong {
+            color: #c0392b;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -544,9 +625,21 @@
             // Extraer secciones relevantes
             const codeProblematicoSection = extractSection(problemContent, "Código Problemático");
             const consecuenciasSection = extractSection(problemContent, "Consecuencias");
+            const impactoMantenimientoSection = extractSection(problemContent, "Impacto en el Mantenimiento");
             const solucionSection = extractSection(problemContent, "Solución Recomendada");
             const beneficiosSection = extractSection(problemContent, "Beneficios de la Solución");
             const conclusionSection = extractSection(problemContent, "Conclusión");
+            
+            // Extraer el problema principal de mantenimiento
+            const problemaPrincipalMatch = impactoMantenimientoSection.match(/### Problema principal de mantenimiento:\s*\*\*([^*]+)\*\*/);
+            // Añade esta línea para definir problemaPrincipal
+            const problemaPrincipal = problemaPrincipalMatch ? problemaPrincipalMatch[1].trim() : '';
+
+            // Limpiar la sección de impacto para quitar la línea del problema principal
+            let impactoClean = impactoMantenimientoSection;
+            if (problemaPrincipalMatch) {
+                impactoClean = impactoMantenimientoSection.replace(/### Problema principal de mantenimiento:\s*\*\*([^*]+)\*\*/, '').trim();
+            }
             
             // Construir el HTML para la pestaña
             let html = `
@@ -575,6 +668,48 @@
                     <div class="consequences">
                         <h2>Consecuencias</h2>
                         ${formatList(consecuenciasSection)}
+                    </div>
+                `;
+            }
+            
+            // Agregar impacto en mantenimiento si existe
+            if (impactoMantenimientoSection) {
+                // Extraer nivel de impacto (Alto, Medio, Bajo)
+                const impactLevelMatch = impactoMantenimientoSection.match(/\*\*Impacto:\s+([^*]+)\*\*/);
+                const impactLevel = impactLevelMatch ? impactLevelMatch[1].trim() : '';
+                
+                // Determinar la clase CSS según el nivel de impacto
+                let impactLevelClass = '';
+                if (impactLevel.toLowerCase().includes('alto')) {
+                    impactLevelClass = 'impact-high';
+                } else if (impactLevel.toLowerCase().includes('medio')) {
+                    impactLevelClass = 'impact-medium';
+                } else if (impactLevel.toLowerCase().includes('bajo')) {
+                    impactLevelClass = 'impact-low';
+                }
+                
+                // Extraer el problema principal (al final del texto)
+                const problemaPrincipalMatch = impactoMantenimientoSection.match(/Problema principal de mantenimiento:\s*\*\*([^*]+)\*\*/);
+                const problemaPrincipal = problemaPrincipalMatch ? problemaPrincipalMatch[1].trim() : '';
+                
+                // Limpiar la sección de impacto para quitar el nivel de impacto y el problema principal
+                let impactoClean = impactoMantenimientoSection;
+                if (impactLevelMatch) {
+                    impactoClean = impactoClean.replace(/\*\*Impacto:\s+([^*]+)\*\*/, '').trim();
+                }
+                if (problemaPrincipalMatch) {
+                    impactoClean = impactoClean.replace(/Problema principal de mantenimiento:\s*\*\*([^*]+)\*\*/, '').trim();
+                }
+                
+                // En lugar de mostrar como párrafo, usar formatList para preservar la estructura de lista numerada
+                const formattedImpact = formatList(impactoClean);
+                
+                html += `
+                    <div class="maintenance-impact">
+                        <h2>Impacto en el Mantenimiento</h2>
+                        ${impactLevel ? `<div class="impact-level ${impactLevelClass}">${impactLevel}</div>` : ''}
+                        ${formattedImpact}
+                        ${problemaPrincipal ? `<h3>Problema principal de mantenimiento: <strong>${problemaPrincipal}</strong></h3>` : ''}
                     </div>
                 `;
             }
@@ -663,9 +798,9 @@
             function escapeHtml(text) {
                 return text
                     .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
+                    .replace(/</g, "&lt;")  // Corregido
                     .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
+                    .replace(/"/g, "&quot;") // Corregido
                     .replace(/'/g, "&#039;");
             }
             

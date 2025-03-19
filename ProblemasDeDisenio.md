@@ -27,6 +27,15 @@ if (ViewModel.UserAuthorizationFailed && firstRender)
 4. **Acoplamiento temporal**: Asume que siempre 5 segundos es el tiempo adecuado para cualquier situación
 5. **Falta de manejo de errores**: No verifica si la operación de logout fue exitosa
 
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El uso de tiempos de espera fijos crea una fragilidad significativa en el código.** Los desarrolladores no pueden determinar fácilmente por qué se eligió ese tiempo específico (5 segundos), lo que lleva a modificaciones conservadoras donde nadie se atreve a cambiar el valor por temor a romper la funcionalidad.
+2. **Una historia de usuario relacionada con modificar el comportamiento de autenticación podría incrementar su complejidad en 2-3x**, ya que los desarrolladores tendrían que investigar experimentalmente cuál es el tiempo mínimo necesario para que funcione correctamente en diferentes entornos y condiciones de red.
+3. **Las pruebas sobre esta funcionalidad no son confiables porque dependen del tiempo de ejecución**, lo que puede variar según la carga del sistema, conduciendo a falsos positivos/negativos en las pruebas automatizadas. Un test que funciona en la máquina del desarrollador puede fallar en el servidor de CI/CD.
+
+Problema principal de mantenimiento: **ACOPLAMIENTO TEMPORAL**
+
 ## Solución Recomendada
 
 ```csharp
@@ -101,6 +110,15 @@ public async Task<IEnumerable<OperationDto>> GetAllOperationsForCompany(Guid com
 3. **Ineficiencia en consultas**: La base de datos tiene que recuperar y transferir registros que no serán mostrados
 4. **Problemas de escalabilidad**: El sistema no podrá manejar volúmenes de datos crecientes
 5. **Experiencia de usuario deficiente**: Tiempos de carga largos y posible congelamiento de la interfaz
+
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque este enfoque crea #3una barrera invisible para la escalabilidad.** A medida que los datos crecen, el sistema empezará a fallar sin una causa aparente, generando problemas de memoria que son difíciles de diagnosticar y resolver.
+2. **Una historia relacionada con añadir funcionalidades que impliquen estos conjuntos de datos se verá gravemente afectada**, incrementando el tiempo de desarrollo hasta en un **200%**, a medida que los desarrolladores luchan con problemas de rendimiento inesperados y comportamientos inconsistentes.
+3. **Las pruebas sobre esta funcionalidad no son confiables porque funcionarán correctamente con conjuntos de datos pequeños (típicos en entornos de prueba)**, pero fallarán impredeciblemente en producción con volúmenes reales de datos.
+
+Problema principal de mantenimiento: **ESCALABILIDAD**
 
 ## Solución Recomendada
 
@@ -198,6 +216,15 @@ public class DocumentValidationService : IDocumentValidationService
 3. **Dificultad para pruebas unitarias**: Probar una validación específica requiere configurar todas las dependencias
 4. **Alto acoplamiento**: La clase depende de múltiples servicios externos
 5. **Falta de cohesión**: Las diferentes validaciones no están relacionadas intrínsecamente entre sí
+
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque cada modificación a una validación específica requiere comprender y probar toda la clase completa**, aumentando significativamente el riesgo de efectos secundarios no deseados. Además, los desarrolladores tienden a seguir añadiendo nuevas validaciones a la misma clase, empeorando progresivamente el problema.
+2. **Una historia relacionada con modificar o añadir una nueva regla de validación incrementará su complejidad al menos en un 50%**, ya que los desarrolladores deben asegurarse de que sus cambios no afecten a las otras validaciones existentes y deben configurar un entorno de pruebas complejo.
+3. **Las pruebas sobre esta funcionalidad no son confiables porque es extremadamente difícil probar escenarios aislados:** una prueba de una validación específica puede fallar debido a problemas en otra validación no relacionada o por cambios en cualquiera de las múltiples dependencias.
+
+Problema principal de mantenimiento: **COHESIÓN**
 
 ## Solución Recomendada
 
@@ -354,6 +381,15 @@ public class OperationListViewModel
 4. **Acoplamiento fuerte**: Cambios en la lógica de negocio requieren modificar componentes de UI
 5. **Impedimento para reutilización**: La lógica de negocio no puede reutilizarse en otros contextos
 
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque esta mezcla de responsabilidades crea duplicación de lógica de negocio en múltiples ViewModels.** Cuando cambian las reglas de negocio, los desarrolladores deben identificar y modificar todos los lugares donde se implementó esa lógica, a menudo sin herramientas automatizadas que les ayuden a encontrarla.
+2. **Una historia relacionada con cambios en las reglas de cálculo de tasas o validaciones de negocio incrementará su complejidad y tiempo de implementación al menos en un 100%**, ya que requerirá modificar múltiples componentes de UI y verificar cada caso por separado.
+3. **Las pruebas sobre esta funcionalidad no son confiables porque están atadas a componentes de presentación**, lo que hace que las pruebas de lógica de negocio sean frágiles ante cambios en la UI. Además, muchas veces estas pruebas requieren simular todo el entorno de UI, lo cual es complejo y propenso a errores.
+
+Problema principal de mantenimiento: **SEPARACIÓN DE RESPONSABILIDADES**
+
 ## Solución Recomendada
 
 ```csharp
@@ -487,6 +523,15 @@ private void UpdateAdvanceStatus(ItemToAdvance itemToAdvance)
 4. **Mala experiencia de usuario**: Pueden mostrarse datos incompletos o desactualizados
 5. **Errores difíciles de depurar**: Los problemas aparecen intermitentemente y son difíciles de reproducir
 
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque estos acoplamientos temporales crean comportamientos impredecibles que varían según el entorno de ejecución.** Los desarrolladores no pueden reproducir fácilmente los problemas, llevando a soluciones de "prueba y error" que frecuentemente introducen nuevos problemas.
+2. **Una historia relacionada con mejorar el rendimiento o la experiencia de usuario incrementará drásticamente su complejidad**, pudiendo duplicar o triplicar el tiempo estimado, ya que los desarrolladores tendrán que refactorizar completamente el flujo asíncrono para hacerlo más predecible.
+3. **Las pruebas sobre esta funcionalidad son extremadamente poco confiables**, ya que dependen de timings específicos que varían según la carga del sistema y la velocidad de procesamiento. Las mismas pruebas pueden pasar o fallar en ejecuciones consecutivas sin ningún cambio en el código.
+
+Problema principal de mantenimiento: **PREDECIBILIDAD**
+
 ## Solución Recomendada
 
 ```csharp
@@ -611,6 +656,13 @@ public void ValidateOperation(Operation operation)
 3. **Duplicación**: Textos idénticos se repiten en múltiples archivos del proyecto
 4. **Fragilidad ante cambios**: Un cambio en un texto requiere modificar múltiples archivos
 5. **Falta de contexto**: Los strings codificados directamente no proporcionan contexto sobre su uso
+
+## Impacto en el Mantenimiento
+**Impacto: Bajo**
+
+1. **El impacto en mantenimiento es bajo porque los cambios en textos o mensajes requieren buscar y modificar valores dispersos por toda la base de código.** Esto es especialmente problemático cuando se necesita internacionalizar la aplicación o mantener consistencia en la terminología.
+
+Problema principal de mantenimiento: **CONSISTENCIA**
 
 ## Solución Recomendada
 
@@ -751,6 +803,13 @@ private void UpdateAdvanceStatus(ItemToAdvance itemToAdvance)
 4. **Reducción de la calidad**: Los "parches temporales" tienden a volverse permanentes
 5. **Pérdida de conocimiento**: El contexto de por qué se implementó algo de cierta manera puede olvidarse
 
+## Impacto en el Mantenimiento
+**Impacto: Bajo**
+
+1. **El impacto en mantenimiento es bajo porque estos comentarios señalan problemas conocidos pero no resueltos**, creando una deuda técnica documentada pero ignorada.
+
+Problema principal de mantenimiento: **DEUDA TÉCNICA**
+
 ## Solución Recomendada
 
 ```csharp
@@ -881,6 +940,16 @@ public async Task ProcessItems()
 3. **Falta de documentación**: No se explica el origen o la justificación de los valores
 4. **Dificultad de mantenimiento**: Cambios en los requisitos de negocio requieren modificar el código
 5. **Problemas de configuración**: No se pueden adaptar los valores a diferentes entornos o clientes
+
+## Impacto en el Mantenimiento
+**Impacto: Medio**
+
+1. El impacto en mantenimiento es medio porque **los cambios en estos valores numéricos requieren modificar el código fuente y recompilar la aplicación.**
+2. **Se requiere hacer el mismo trabajo de actualización de valores en el código para cada ambiente DEV, QA y PROD.**
+3. **Los valores harcodeados no tienen un contexto implicito** que indique el origen o justificación de los valores.
+4. **El mismo valor debe de ser actualizado en todos los lugares en los que fue implementado**, se debe de investigar en que otros lugares debemos de sincronizar la actualización de estos valores harcodeados lo que hace que los desarrolladores tengan que invertir análisis adicional en este proceso.
+
+Problema principal de mantenimiento: **CONFIGURABILIDAD**
 
 ## Solución Recomendada
 
@@ -1070,6 +1139,13 @@ public class OperationListViewModel
 3. **Lógica de transición dispersa**: La lógica de cambio de estado está esparcida por todo el código
 4. **Estado no persistente**: Si la aplicación se reinicia, se pierde todo el estado
 5. **Dificultad para depurar**: Es difícil seguir la secuencia de cambios de estado
+
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque la gestión manual de estado crea numerosos escenarios edge-case y condiciones de carrera** que son extremadamente difíciles de identificar y reproducir.
+
+Problema principal de mantenimiento: **DETERMINISMO**
 
 ## Solución Recomendada
 
@@ -1303,6 +1379,13 @@ public class FactoringOperationListViewModel
 4. **Código base inflado**: El tamaño del proyecto aumenta innecesariamente
 5. **Violación del principio DRY**: Don't Repeat Yourself es un principio fundamental ignorado
 
+## Impacto en el Mantenimiento
+**Impacto: Alto**
+
+1. **El impacto en mantenimiento es alto porque el mismo código se repite en múltiples lugares sin una abstracción común.**
+
+Problema principal de mantenimiento: **DUPLICACIÓN**
+
 ## Solución Recomendada
 
 ```csharp
@@ -1502,6 +1585,15 @@ public async Task<Result> ProcessPayment(Guid operationId, decimal amount)
 4. **Imposibilidad de reintentos**: Sin un mecanismo de compensación, es difícil reanudar operaciones fallidas
 5. **Dificultad para diagnosticar problemas**: Sin un registro claro de la transacción y su estado, es difícil entender fallos
 
+## Impacto en el Mantenimiento  
+**Impacto: Alto**  
+
+1. **El impacto en mantenimiento es alto porque cuando fallan las operaciones intermedias, el sistema queda en un estado inconsistente que es extremadamente difícil de recuperar.** Los desarrolladores deben implementar lógica compleja de compensación y recuperación, además de mecanismos para detectar y resolver estas inconsistencias.  
+2. **Una historia relacionada con estos flujos de procesamiento incrementará su complejidad en un 100-150%**, ya que los desarrolladores necesitarán considerar todos los posibles puntos de fallo y diseñar estrategias para mantener la consistencia y la atomicidad de las operaciones. Esto incluye implementación de journaling, compensación y mecanismos de retry.  
+3. **Las pruebas sobre esta funcionalidad no son confiables porque es extremadamente difícil recrear todos los escenarios de fallo posibles**, especialmente los que ocurren en operaciones distribuidas con temporizaciones específicas. Las pruebas de unidad verificarán componentes individuales, pero no validarán el comportamiento del sistema completo ante fallos en un entorno real.  
+
+Problema principal de mantenimiento: **CONSISTENCIA**  
+
 ## Solución Recomendada
 
 ```csharp
@@ -1681,6 +1773,15 @@ public async Task<string> ValidateDocument(DocumentDto document)
 3. **Dificultad para centralizar el tratamiento de errores**: No hay un formato estándar
 4. **Complejidad en el código cliente**: Debe manejar múltiples tipos de respuestas de error
 5. **Problemas de diagnóstico**: La falta de información estructurada dificulta identificar la causa raíz
+
+## Impacto en el Mantenimiento  
+**Impacto: Alto**  
+
+1. **El impacto en mantenimiento es alto porque cada componente implementa su propio enfoque de manejo de errores**, lo que crea una falta de predictibilidad en el comportamiento del sistema. Los desarrolladores deben aprender múltiples patrones para entender cómo se manejan los errores en diferentes partes del código.  
+2. **Una historia relacionada con mejoras en el manejo de errores o implementación de nuevas funcionalidades que requieran manejo de errores incrementará su complejidad en un 70-100%**, ya que los desarrolladores necesitarán analizar cada componente involucrado para entender su enfoque particular, además de decidir entre mantener su patrón inconsistente o refactorizar hacia un enfoque estándar.  
+3. **Las pruebas sobre esta funcionalidad no son confiables porque cada componente necesita ser probado de manera diferente según su enfoque de manejo de errores.** Algunos retornan "null", otros lanzan excepciones, otros utilizan "booleans" o "strings", lo que hace imposible una estrategia de pruebas uniforme y completa.  
+
+Problema principal de mantenimiento: **PREDICTIBILIDAD**  
 
 ## Solución Recomendada
 
@@ -2019,6 +2120,15 @@ public class InvoiceProcessor
 4. **Problemas con estado compartido**: Los singletons estáticos conducen a estado global mutable y comportamiento no determinista
 5. **Violación del principio de inversión de dependencias**: Las clases dependen de implementaciones en lugar de abstracciones
 
+## Impacto en el Mantenimiento  
+**Impacto: Alto**  
+
+1. **El impacto en mantenimiento es alto porque el acoplamiento fuerte crea dependencias rígidas que hacen que los cambios en un componente afecten a muchos otros.** Esto genera un efecto cascada donde una modificación aparentemente simple puede requerir cambios en múltiples lugares.  
+2. **Una historia relacionada con modificar o reemplazar un componente incrementará su complejidad en un 100-200%** debido a las dependencias no explícitas. Lo que debería ser un cambio aislado requiere análisis extensivo para identificar todos los puntos de acoplamiento y modificarlos, con alto riesgo de introducir regresiones.  
+3. **Las pruebas sobre esta funcionalidad son extremadamente poco confiables porque no es posible aislar los componentes para pruebas unitarias efectivas.** Esto lleva a depender de pruebas de integración más lentas y frágiles que no identifican claramente la causa raíz de los fallos.  
+
+Problema principal de mantenimiento: **ACOPLAMIENTO**  
+
 ## Solución Recomendada
 
 ```csharp
@@ -2296,6 +2406,15 @@ public class InvoiceService
 3. **Alto acoplamiento**: Los servicios necesitan conocer detalles internos de las entidades
 4. **Reglas de negocio duplicadas**: La misma lógica puede implementarse inconsistentemente en diferentes servicios
 5. **Difícil testabilidad**: Probar reglas de negocio requiere instanciar servicios con todas sus dependencias
+
+## Impacto en el Mantenimiento  
+**Impacto: Bajo**  
+
+1. **El impacto en mantenimiento es bajo porque la separación entre datos y comportamiento lleva a que las reglas de negocio estén dispersas en múltiples servicios**, lo que dificulta mantener la consistencia cuando cambian los requisitos. Sin embargo, este patrón es común y relativamente bien entendido.  
+2. **Una historia relacionada con cambios en las reglas de negocio incrementará su complejidad en aproximadamente un 40-60%**, ya que los desarrolladores deben identificar todos los servicios que implementan lógica para una entidad específica y asegurarse de que los cambios sean consistentes a través de todos ellos.  
+3. **Las pruebas sobre esta funcionalidad son moderadamente confiables para validar servicios individuales**, pero no garantizan que todos los servicios que trabajan con las mismas entidades mantengan reglas de negocio consistentes, lo que puede llevar a comportamientos inesperados cuando la aplicación escala.  
+
+Problema principal de mantenimiento: **COHESIÓN**  
 
 ## Solución Recomendada
 
@@ -2613,6 +2732,15 @@ public class OrderService
 5. **Ocultación de transformaciones**: Las conversiones implícitas esconden lógica de negocio importante
 6. **Mezcla de responsabilidades**: Los servicios contienen tanto lógica de negocio como de mapeo
 
+## Impacto en el Mantenimiento  
+**Impacto: Medio**  
+
+1. **El impacto en mantenimiento es medio porque las transformaciones de objetos están dispersas por todo el código**, con implementaciones inconsistentes y a menudo duplicadas. Cuando cambia la estructura de datos, los desarrolladores deben rastrear y actualizar todos los mapeos manualmente.  
+2. **Una historia relacionada con cambios en estructuras de datos o DTOs incrementará su complejidad en aproximadamente un 60-100%**, ya que los desarrolladores deben identificar todos los puntos donde se realiza el mapeo (a menudo sin herramientas automáticas que lo faciliten) y asegurarse de que todos se actualicen correctamente.  
+3. **Las pruebas sobre esta funcionalidad son moderadamente confiables para casos individuales, pero no capturan inconsistencias entre diferentes implementaciones de mapeo**, lo que puede llevar a comportamientos inconsistentes en distintas partes de la aplicación que deberían comportarse igual.  
+
+Problema principal de mantenimiento: **CONSISTENCIA**  
+
 ## Solución Recomendada
 
 ```csharp
@@ -2867,6 +2995,15 @@ public async Task<bool> ValidateDocumentAsync(Document document)
 3. **Operaciones zombies**: Sin propagación de `CancellationToken`, las operaciones continúan ejecutándose incluso cuando ya no son necesarias
 4. **Uso ineficiente de recursos**: La mezcla de código sincrónico y asincrónico reduce los beneficios del modelo asíncrono
 5. **Sobrecarga innecesaria**: El uso de `await` para retornar una tarea simplemente añade trabajo para el compilador
+
+## Impacto en el Mantenimiento  
+**Impacto: Alto**  
+
+1. **El impacto en mantenimiento es alto porque los problemas con código asincrónico son extremadamente difíciles de diagnosticar y corregir.** Los síntomas (como deadlocks, fugas de recursos o excepciones no manejadas) a menudo aparecen lejos del código que causa el problema, complicando la identificación de la causa raíz.  
+2. **Una historia relacionada con rendimiento, escalabilidad o corrección de errores intermitentes incrementará su complejidad en un 100-150%**, ya que los desarrolladores necesitarán comprender patrones asincrónicos complejos e interacciones sutiles entre componentes para identificar y corregir problemas que pueden ser específicos de ciertas condiciones de carga o timing.  
+3. **Las pruebas sobre esta funcionalidad no son confiables porque los problemas asincrónicos a menudo dependen del contexto de ejecución**, timing y carga del sistema. Las pruebas pueden pasar consistentemente en entornos de desarrollo y fallar intermitentemente en producción bajo carga real.  
+
+Problema principal de mantenimiento: **CONCURRENCIA**  
 
 ## Solución Recomendada
 
@@ -3130,6 +3267,14 @@ public class PaymentsController : ControllerBase
 4. **Errores ocultos**: Códigos de estado incorrectos (200 para errores) complican la detección
 5. **Experiencia deficiente de API**: Falta estandarización en los patrones de respuesta
 6. **Dificultad de depuración**: Mensajes de error inconsistentes complican la identificación de problemas
+
+## Impacto en el Mantenimiento  
+**Impacto: Medio**  
+1. **El impacto en mantenimiento es medio porque la inconsistencia en respuestas de API crea confusión tanto para desarrolladores backend como frontend.** Cada nuevo desarrollador debe aprender patrones diferentes para cada endpoint, lo que ralentiza el desarrollo y aumenta la curva de aprendizaje.  
+2. **Una historia relacionada con integración de API o manejo de errores incrementará su complejidad en aproximadamente un 30-50%**, ya que los desarrolladores deben estudiar y adaptarse a múltiples patrones de respuesta, además de mantener tratamientos específicos para cada tipo de endpoint.  
+3. **Las pruebas de integración son moderadamente confiables pero requieren enfoques específicos para cada endpoint**, lo que aumenta la complejidad del código de prueba y reduce su capacidad para detectar inconsistencias entre diferentes partes de la API.  
+
+Problema principal de mantenimiento: **CONSISTENCIA**  
 
 ## Solución Recomendada
 
@@ -3539,6 +3684,15 @@ public class UserService
 4. **Incapacidad para seguir flujos completos**: Falta de correlación entre logs relacionados
 5. **Degradación del rendimiento**: Logs excesivos o ineficientes que afectan el desempeño de la aplicación
 6. **Problemas de cumplimiento normativo**: Registro inadecuado de eventos auditables requeridos por regulaciones
+
+## Impacto en el Mantenimiento  
+**Impacto: Medio**  
+
+1. **El impacto en mantenimiento es medio porque el logging incorrecto dificulta significativamente el diagnóstico de problemas en entornos de producción.** Los desarrolladores gastan tiempo excesivo intentando reproducir y entender problemas que podrían haberse diagnosticado fácilmente con logs adecuados.  
+2. **Una historia relacionada con investigación de problemas o implementación de monitoreo incrementará su complejidad en aproximadamente un 70-100%**, ya que los desarrolladores tendrán que añadir instrumentación adicional para compensar la falta de información en los logs existentes.  
+3. **Las pruebas sobre esta funcionalidad generalmente no existen, ya que el logging es tratado como un "efecto secundario"** del código y raramente se verifica en pruebas automatizadas, lo que permite que las malas prácticas persistan sin detección.  
+
+Problema principal de mantenimiento:** **OBSERVABILIDAD**  
 
 ## Solución Recomendada
 
@@ -3974,6 +4128,15 @@ public class DocumentGenerator
 4. **Documentación viva insuficiente**: Las pruebas sirven como documentación ejecutable de cómo debe comportarse el sistema
 5. **Diseño deficiente**: La ausencia de TDD lleva a componentes con alta cohesión y bajo desacoplamiento
 6. **Deuda técnica creciente**: La falta de pruebas facilita la acumulación de código de baja calidad
+
+## Impacto en el Mantenimiento  
+**Impacto: Alto**  
+
+1. **El impacto en mantenimiento es alto porque la falta de pruebas automatizadas significa que cada cambio lleva un riesgo significativo de introducir regresiones que no serán detectadas hasta llegar a producción.** Esto lleva a ciclos de desarrollo más largos con más tiempo dedicado a pruebas manuales y corrección de errores.  
+2. **Una historia relacionada con modificaciones en áreas sin cobertura de pruebas incrementará su complejidad en un 100-150%**, ya que los desarrolladores tendrán que realizar pruebas manuales extensivas o escribir pruebas desde cero antes de implementar los cambios con confianza, además del riesgo de introducir errores no detectados.  
+3. **Por definición, las pruebas sobre esta funcionalidad son inexistentes o insuficientes**, lo que hace que cualquier modificación sea inherentemente arriesgada y requiera verificación manual extensa.  
+
+Problema principal de mantenimiento: **CONFIABILIDAD**  
 
 ## Solución Recomendada
 
@@ -4617,6 +4780,15 @@ public class Program
 5. **Dificultad en la planificación de capacidad:** Sin métricas de rendimiento, es imposible prever necesidades de escalamiento
 6. **Dependencias no monitorizadas:** Fallos en servicios externos pueden pasar desapercibidos hasta causar problemas mayores
 7. **Recuperación manual:** La ausencia de auto-diagnóstico requiere intervención manual frecuente
+
+## Impacto en el Mantenimiento  
+**Impacto: Medio**  
+
+1. **El impacto en mantenimiento es medio porque la falta de monitoreo adecuado significa que los problemas solo se detectan cuando los usuarios los reportan**, lo que aumenta significativamente el tiempo medio de detección y resolución de incidentes. Los equipos operan en un modo reactivo en lugar de proactivo.  
+2. **Una historia relacionada con operaciones, resolución de incidentes o mejoras de rendimiento incrementará su complejidad en un 50-100%**, ya que los desarrolladores tendrán que implementar instrumentación ad-hoc para obtener la información necesaria en cada caso, en lugar de contar con una infraestructura de monitoreo ya establecida.  
+3. **No existen pruebas automatizadas que verifiquen la salud del sistema**, lo que significa que los problemas solo se detectan en producción cuando ya están afectando a los usuarios finales, generando un impacto negativo en la experiencia de usuario.  
+
+Problema principal de mantenimiento: **OBSERVABILIDAD**
 
 ## Solución Recomendada
 ```csharp
